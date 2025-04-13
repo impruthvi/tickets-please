@@ -8,7 +8,7 @@ use App\Http\Requests\Api\V1\UpdateUserRequest;
 use App\Http\Resources\V1\UserResource;
 use App\Models\User;
 
-class UserController extends ApiController
+class AuthorController extends ApiController
 {
     /**
      * Display a listing of the resource.
