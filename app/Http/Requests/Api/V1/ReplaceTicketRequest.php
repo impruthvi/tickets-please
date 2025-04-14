@@ -4,7 +4,7 @@ namespace App\Http\Requests\Api\V1;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class ReplaceTicketRequest extends FormRequest
+class ReplaceTicketRequest extends BaseTicketRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -25,10 +25,9 @@ class ReplaceTicketRequest extends FormRequest
             'data.attributes.title' => ['required', 'string', 'max:255'],
             'data.attributes.description' => ['required', 'string'],
             'data.attributes.status' => ['required', 'string', 'in:A,C,H,X'],
-
         ];
 
-        if ($this->routeIs('tickets.store')) {
+        if ($this->routeIs('tickets.replace')) {
             $rules['data.relationships.author.data.id'] = ['required', 'integer'];
         }
 
@@ -36,10 +35,4 @@ class ReplaceTicketRequest extends FormRequest
         return $rules;
     }
 
-    public function messages(): array
-    {
-        return [
-            'data.attributes.status.in' => 'The status must be one of the following: A, C, H, or X.',
-        ];
-    }
 }
