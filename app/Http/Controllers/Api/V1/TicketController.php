@@ -33,11 +33,17 @@ class TicketController extends ApiController
     {
         try {
             User::findOrFail($request->input('data.relationships.author.data.id'));
-        } catch (\Exception $e) {
-            return $this->error("User cannot found", 404);
-        }
 
-        return new TicketResource(Ticket::create($request->mappedAttributes()));
+            $ticket = Ticket::create($request->mappedAttributes());
+
+            $this->isAble('store', $ticket);
+
+            return new TicketResource($ticket);
+        } catch (ModelNotFoundException $e) {
+            return $this->error("User cannot found", 404);
+        } catch (AuthorizationException $e) {
+            return $this->error("You are not authorized to create this ticket", 403);
+        }
     }
 
     /**
@@ -87,11 +93,15 @@ class TicketController extends ApiController
         try {
             $ticket = Ticket::findOrFail($ticket_id);
 
+            $this->isAble('replace', $ticket);
+
             $ticket->update($request->mappedAttributes());
 
             return new TicketResource($ticket);
         } catch (ModelNotFoundException $e) {
             return $this->error("Ticket cannot found", 404);
+        } catch (AuthorizationException $e) {
+            return $this->error("You are not authorized to replace this ticket", 403);
         }
     }
 
@@ -102,11 +112,16 @@ class TicketController extends ApiController
     {
         try {
             $ticket = Ticket::findOrFail($ticket_id);
+
+            $this->isAble('delete', $ticket);
+
             $ticket->delete();
 
             return $this->ok("Ticket deleted successfully");
         } catch (ModelNotFoundException $e) {
             return $this->error("Ticket cannot found", 404);
+        } catch (AuthorizationException $e) {
+            return $this->error("You are not authorized to delete this ticket", 403);
         }
     }
 }
