@@ -18,24 +18,15 @@ class TicketPolicy
         //
     }
 
-    public function delete(User $user, Ticket $ticket)
+    public function store(User $user)
     {
-        if ($user->tokenCan(Abilities::DeleteTicket)) {
-            return true;
-        } else if ($user->tokenCan(Abilities::DeleteOwnTicket)) {
-            return $user->id === $ticket->user_id;
-        }
-
-        return false;
+        return $user->tokenCan(Abilities::CreateTicket) || $user->tokenCan(Abilities::CreateOwnTicket);
     }
 
-    public function replace(User $user, Ticket $ticket)
-    {
-        if ($user->tokenCan(Abilities::ReplaceTicket)) {
-            return true;
-        }
 
-        return false;
+    public function replace(User $user)
+    {
+        return $user->tokenCan(Abilities::ReplaceTicket);
     }
 
 
@@ -50,8 +41,14 @@ class TicketPolicy
         return false;
     }
 
-    public function store(User $user)
+    public function delete(User $user, Ticket $ticket)
     {
-        return $user->tokenCan(Abilities::CreateTicket) || $user->tokenCan(Abilities::CreateOwnTicket);
+        if ($user->tokenCan(Abilities::DeleteTicket)) {
+            return true;
+        } else if ($user->tokenCan(Abilities::DeleteOwnTicket)) {
+            return $user->id === $ticket->user_id;
+        }
+
+        return false;
     }
 }
