@@ -9,10 +9,15 @@ use App\Http\Requests\Api\V1\UpdateTicketRequest;
 use App\Http\Resources\V1\TicketResource;
 use App\Models\Ticket;
 use App\Models\User;
+use App\Policies\V1\TicketPolicy;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class AuthorTicketsController extends ApiController
 {
+
+    protected $policyClass = TicketPolicy::class;
+
     public function index($author_id, TicketFilter $filters)
     {
         return TicketResource::collection(
@@ -23,33 +28,15 @@ class AuthorTicketsController extends ApiController
     /**
      * Store a newly created resource in storage.
      */
-    public function store($author_id, StoreTicketRequest $request)
+    public function store(StoreTicketRequest $request, $author_id)
     {
         try {
-            User::findOrFail($author_id);
-        } catch (\Exception $e) {
-            return $this->error("User cannot found", 404);
-        }
-
-        return new TicketResource(Ticket::create($request->mappedAttributes()));
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy($author_id, $ticket_id)
-    {
-        try {
-            $ticket = Ticket::findOrFail($ticket_id);
-
-            if ($ticket->user_id == $author_id) {
-                $ticket->delete();
-                return $this->ok("Ticket deleted successfully");
-            }
-
-            return $this->error("Ticket cannot found", 404);
-        } catch (ModelNotFoundException $e) {
-            return $this->error("Ticket cannot found", 404);
+            $this->isAble('store', Ticket::class);
+            return new TicketResource(Ticket::create($request->mappedAttributes([
+                'author' => 'user_id'
+            ])));
+        } catch (AuthorizationException $e) {
+            return $this->error("You are not authorized to create this ticket", 403);
         }
     }
 
@@ -59,17 +46,17 @@ class AuthorTicketsController extends ApiController
     public function replace(ReplaceTicketRequest $request, $author_id, $ticket_id)
     {
         try {
-            $ticket = Ticket::findOrFail($ticket_id);
+            $ticket = Ticket::whereId($ticket_id)->whereUserId($author_id)->firstOrFail();
 
-            if ($ticket->user_id == $author_id) {
+            $this->isAble('replace', $ticket);
 
-                $ticket->update($request->mappedAttributes());
+            $ticket->update($request->mappedAttributes());
 
-                return new TicketResource($ticket);
-            }
-            return $this->error("Ticket cannot found", 404);
+            return new TicketResource($ticket);
         } catch (ModelNotFoundException $e) {
             return $this->error("Ticket cannot found", 404);
+        } catch (AuthorizationException $e) {
+            return $this->error("You are not authorized to replace this ticket", 403);
         }
     }
 
@@ -79,17 +66,37 @@ class AuthorTicketsController extends ApiController
     public function update(UpdateTicketRequest $request, $author_id, $ticket_id)
     {
         try {
-            $ticket = Ticket::findOrFail($ticket_id);
+            $ticket = Ticket::whereId($ticket_id)->whereUserId($author_id)->firstOrFail();
 
-            if ($ticket->user_id == $author_id) {
+            $this->isAble('update', $ticket);
 
-                $ticket->update($request->mappedAttributes());
+            $ticket->update($request->mappedAttributes());
 
-                return new TicketResource($ticket);
-            }
-            return $this->error("Ticket cannot found", 404);
+            return new TicketResource($ticket);
         } catch (ModelNotFoundException $e) {
             return $this->error("Ticket cannot found", 404);
+        } catch (AuthorizationException $e) {
+            return $this->error("You are not authorized to update this ticket", 403);
+        }
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy($author_id, $ticket_id)
+    {
+        try {
+            $ticket = Ticket::whereId($ticket_id)->whereUserId($author_id)->firstOrFail();
+
+            $this->isAble('delete', $ticket);
+
+            $ticket->delete();
+
+            return $this->ok("Ticket deleted successfully");
+        } catch (ModelNotFoundException $e) {
+            return $this->error("Ticket cannot found", 404);
+        } catch (AuthorizationException $e) {
+            return $this->error("You are not authorized to delete this ticket", 403);
         }
     }
 }
