@@ -11,7 +11,7 @@ class StoreTicketRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -21,8 +21,23 @@ class StoreTicketRequest extends FormRequest
      */
     public function rules(): array
     {
+        $rules =  [
+            'data.attributes.title' => ['required', 'string', 'max:255'],
+            'data.attributes.description' => ['required', 'string'],
+            'data.attributes.status' => ['required', 'string', 'in:A,C,H,X'],
+        ];
+        if ($this->routeIs('tickets.store')) {
+            $rules['data.relationships.author.data.id'] = ['required', 'integer', 'exists:users,id'];
+        }
+
+        return $rules;
+    }
+
+    public function messages(): array
+    {
         return [
-            //
+            'data.attributes.status.in' => 'The status must be one of the following: A, C, H, or X.',
+            'data.relationships.author.data.id.exists' => 'The provided user ID does not exist.',
         ];
     }
 }

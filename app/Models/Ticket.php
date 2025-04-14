@@ -16,7 +16,8 @@ class Ticket extends Model
     protected $fillable = [
         'title',
         'description',
-        'status'
+        'status',
+        'user_id',
     ];
 
     public function author(): BelongsTo
