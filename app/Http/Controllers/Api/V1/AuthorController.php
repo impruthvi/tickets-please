@@ -29,8 +29,14 @@ class AuthorController extends ApiController
     /**
      * Display the specified resource.
      */
-    public function show(User $user)
+    public function show($user_id)
     {
+        try {
+            $user = User::findOrFail($user_id);
+        } catch (\Exception $e) {
+            return $this->error('User not found', 404);
+        }
+
         if ($this->include('tickets')) {
             return new UserResource($user->load('tickets'));
         }
