@@ -7,6 +7,7 @@ use App\Http\Requests\Api\V1\StoreTicketRequest;
 use App\Http\Requests\Api\V1\UpdateTicketRequest;
 use App\Http\Resources\V1\TicketResource;
 use App\Models\Ticket;
+use App\Models\User;
 
 class TicketController extends ApiController
 {
@@ -23,6 +24,12 @@ class TicketController extends ApiController
      */
     public function store(StoreTicketRequest $request)
     {
+        try {
+            User::findOrFail($request->input('data.relationships.author.data.id'));
+        } catch (\Exception $e) {
+            return $this->error("User not found", 404);
+        }
+
         $model = [
             'title' => $request->input('data.attributes.title'),
             'description' => $request->input('data.attributes.description'),

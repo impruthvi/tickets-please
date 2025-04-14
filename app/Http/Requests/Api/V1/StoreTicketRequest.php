@@ -26,8 +26,9 @@ class StoreTicketRequest extends FormRequest
             'data.attributes.description' => ['required', 'string'],
             'data.attributes.status' => ['required', 'string', 'in:A,C,H,X'],
         ];
+
         if ($this->routeIs('tickets.store')) {
-            $rules['data.relationships.author.data.id'] = ['required', 'integer', 'exists:users,id'];
+            $rules['data.relationships.author.data.id'] = ['required', 'integer'];
         }
 
         return $rules;
@@ -37,7 +38,6 @@ class StoreTicketRequest extends FormRequest
     {
         return [
             'data.attributes.status.in' => 'The status must be one of the following: A, C, H, or X.',
-            'data.relationships.author.data.id.exists' => 'The provided user ID does not exist.',
         ];
     }
 }
