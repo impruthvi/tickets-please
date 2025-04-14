@@ -32,13 +32,10 @@ class TicketController extends ApiController
     public function store(StoreTicketRequest $request)
     {
         try {
-            User::findOrFail($request->input('data.relationships.author.data.id'));
 
-            $ticket = Ticket::create($request->mappedAttributes());
+            $this->isAble('store', Ticket::class);
 
-            $this->isAble('store', $ticket);
-
-            return new TicketResource($ticket);
+            return new TicketResource(Ticket::create($request->mappedAttributes()));
         } catch (ModelNotFoundException $e) {
             return $this->error("User cannot found", 404);
         } catch (AuthorizationException $e) {

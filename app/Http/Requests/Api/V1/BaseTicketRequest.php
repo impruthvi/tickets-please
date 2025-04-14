@@ -33,6 +33,8 @@ class BaseTicketRequest extends FormRequest
     {
         return [
             'data.attributes.status.in' => 'The status must be one of the following: A, C, H, or X.',
+            'data.relationships.author.data.id.size' => 'The author ID must be the same as the authenticated user ID.',
+            'data.relationships.author.data.id.exists' => 'The selected author ID does not exist.',
         ];
     }
 }
